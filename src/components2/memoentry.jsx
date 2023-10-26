@@ -27,7 +27,7 @@ import {useDispatch} from "react-redux"
 import {showOpen,hideOpen} from "../Redux/NetworkSlice.js"
 
 function Memo() {
-  const [Memo, setMemo] = useState([]);
+  const [memo, setMemo] = useState([]);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
   const [updateId, setUpdateId] = useState("");
@@ -39,6 +39,7 @@ function Memo() {
   const [loading, setLoading] = useState(false);
   const [memoDetails, setMemoDetails] = useState([]);
   const dispatch=useDispatch()
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchData = async () => {
     try {
@@ -68,7 +69,7 @@ function Memo() {
 
   useEffect(() => {
     fetchData();
-  }, [searched]);
+  }, []);
 
   
   const handleSubmit = async (value) => {
@@ -156,20 +157,28 @@ function Memo() {
   };
   const searchers = [];
 
-  Memo &&
-    Memo.map((data) => {
+ console.log(memo,"trigger")
+
+  memo &&
+    memo.map((data) => {
+      
       return searchers.push(
         {
+          label:data.drivername,
           value: data.drivername,
         },
         {
+          label: data.driverphone,
           value: data.driverphone,
         },
         {
+          label: data.vehicleno,
           value: data.vehicleno,
         }
       );
     });
+
+  
 
   const { onDownload } = useDownloadExcel({
     currentTableRef: tableRef.current,
@@ -182,7 +191,11 @@ function Memo() {
       title: <h1 className="!text-[12px] lg:!text-[18px]">GC No</h1>,
       dataIndex: "serialNumber",
       key: "serialNumber",
-      render: (text, record, index) => index + 121,
+      render: (text, record, index) => {
+        // Calculate the GC No based on the current page and index
+        const gcNo = (currentPage - 1) * 5 + index + 121;
+        return <div className="text-[10px] lg:text-[12px]">{gcNo}</div>;
+      },
     },
 
     {
@@ -195,7 +208,7 @@ function Memo() {
       title: <h1 className="!text-[12px] lg:!text-[18px]">Vehicle No</h1>,
       dataIndex: "vehicleno",
       key: "vehicleno",
-      render: (text) => <div className="!text-[16px]">{text}</div>,
+      render: (text) => <div className="text-[10px]  lg:!text-[16px]">{text}</div>,
     },
     {
       title: <h1 className="!text-[12px] lg:!text-[18px]">Driver Name</h1>,
@@ -297,9 +310,16 @@ function Memo() {
         <Skeleton loading={loading}>
           <Table
             columns={columns}
-            dataSource={Memo}
+            dataSource={memo}
             ref={tableRef}
-            pagination={{ pageSize: 5 }}
+            pagination={{
+              pageSize: 5,
+              current: currentPage, // Set the current page from the state
+              onChange: (page) => {
+                // Update the currentPage when changing the page
+                setCurrentPage(page);
+              },
+            }}
             className="!overflow-x-scroll"
           />
         </Skeleton>
